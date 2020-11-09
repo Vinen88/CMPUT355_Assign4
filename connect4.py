@@ -83,10 +83,13 @@ class Game_board:
                         move = input("Player Two Move Again(Invalid Position): ")
                     player = 0
         if self.check_win("R"):
+            self.print()
             print("RED WINS!!")
         elif self.check_win("B"):
+            self.print()
             print("BLACK WINS!!")
         else:
+            self.print()
             print("DRAW!! OR GAME OVER!!")
 board = Game_board()
 board.two_play_game()
