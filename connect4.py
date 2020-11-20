@@ -1,14 +1,27 @@
+from random import shuffle
+
 class Game_board:
     pos = []
     moves = []
+
+    class Game_tree:
+        board = []
+        moves = []
+        def __init__(self, board):
+            self.board = board
     def __init__(self):
         self.pos = [["*" for i in range(7)] for i in range(6)]
+    
+    def __repr__(self):
+        self.print()
+
     def print(self):
         for row in reversed(self.pos):
             for position in row:
                 print(position, end='\t')
             print('\n')
         print("1\t2\t3\t4\t5\t6\t7")
+    
     def move(self, position, player):
         for row in range(len(self.pos)):
         #for row in self.pos:
@@ -133,6 +146,12 @@ class Game_board:
         print("b to go back a move")
         print("exit to exit")
 
+    def random_player(self):
+        moves = [1,2,3,4,5,6,7]
+        shuffle(moves)
+        print(moves)
+        return str(moves.pop())
+
     def two_play_game(self):
         player = 0
         while(not(self.check_win("R")) and not(self.check_win("B")) and not(self.board_full())):
@@ -146,12 +165,12 @@ class Game_board:
             elif move == "exit":
                 exit()
             elif move == "b":
-                if board.is_empty():
+                if self.is_empty():
                     print("Board is empty, please make a move first.\n")
                 else:
-                    board.remove_move()
+                    self.remove_move()
             elif move == "s":
-                print(board.check_score("R"))
+                print(self.check_score("R"))
             else:
                 if player == 0:
                     while(self.move(int(move)-1, 'R')):
@@ -170,5 +189,46 @@ class Game_board:
         else:
             self.print()
             print("DRAW!! OR GAME OVER!!")
+    
+    def single_player(self):
+        player = 0
+        while(not(self.check_win("R")) and not(self.check_win("B")) and not(self.board_full())):
+            self.print()
+            if player == 0:
+                move = input("Player Move: ")
+            elif player == 1:
+                move = self.random_player()
+            if move == "h":
+                self.print_help()
+            elif move == "exit":
+                exit()
+            elif move == "b":
+                if self.is_empty():
+                    print("Board is empty, please make a move first.\n")
+                else:
+                    self.remove_move()
+            elif move == "s":
+                print(self.check_score("R"))
+            else:
+                if move not in ['1','2','3','4','5','6','7']:
+                    self.print_help()
+                    move = input("not a valid move try again: ")
+                if player == 0:
+                    while(self.move(int(move)-1, 'R')):
+                        move = input("Player One Move Again(Invalid Position): ")
+                    player = 1
+                elif player == 1:
+                    while(self.move(int(move)-1, 'B')):
+                        move = input("Player Two Move Again(Invalid Position): ")
+                    player = 0
+        if self.check_win("R"):
+            self.print()
+            print("RED WINS!!")
+        elif self.check_win("B"):
+            self.print()
+            print("BLACK WINS!!")
+        else:
+            self.print()
+            print("DRAW!! OR GAME OVER!!")
 board = Game_board()
-board.two_play_game()
+board.single_player()
