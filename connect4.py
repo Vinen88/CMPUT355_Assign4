@@ -1,14 +1,45 @@
 from random import shuffle
 
+class Game_tree:
+        board = []
+        move_one = None
+        move_two = None
+        move_three = None
+        move_four = None
+        move_five = None
+        move_six = None
+        move_seven = None
+        parent = None
+        score = 0
+        def __init__(self, board, score):
+            self.board = board
+            self.score = score
+        
+        def set_one(self, game_tree):
+            self.move_one = game_tree
+        
+        def set_two(self, game_tree):
+            self.move_two = game_tree
+        
+        def set_three(self, game_tree):
+            self.move_three = game_tree
+
+        def set_four(self, game_tree):
+            self.move_four = game_tree
+
+        def set_five(self, game_tree):
+            self.move_five = game_tree
+
+        def set_six(self, game_tree):
+            self.move_six = game_tree
+
+        def set_seven(self, game_tree):
+            self.move_seven = game_tree
+
 class Game_board:
     pos = []
     moves = []
 
-    class Game_tree:
-        board = []
-        moves = []
-        def __init__(self, board):
-            self.board = board
     def __init__(self):
         self.pos = [["*" for i in range(7)] for i in range(6)]
     
@@ -30,7 +61,18 @@ class Game_board:
                 self.moves.append((row,position))
                 return False
         return True
-    
+
+    def tree_move(self, position, player, board):
+        for row in range(len(board)):
+        #for row in self.pos:
+            if board[row][position] == "*":
+                board[row][position] = player
+                return board
+        return False
+
+    def build_tree(self, player, parent=None):
+        root = Game_tree(self.pos, self.check_score(player, self.pos))
+
     def remove_move(self):
         move = self.moves.pop()
         self.pos[move[0]][move[1]] = '*'
@@ -80,25 +122,36 @@ class Game_board:
                         if self.pos[i][j+1] == symbol and self.pos[i][j+2] == symbol and self.pos[i][j+3] == symbol:
                             return True
         return False
-    
-    def check_score(self, symbol, first=0):
+
+    #this is a best and is terrible I have no other idea how to do it
+    def check_score(self, symbol, board, first=0):
         if first == 0:
-            other_score = self.check_score("B" if symbol == "R" else "R", 1)
+            other_score = self.check_score("B" if symbol == "R" else "R", board, 1)
         score = 0
         #counted = []
         for i in range(6):
             for j in range(7):
                 up_checked = 0
-                if self.pos[i][j] == symbol:
+                if board[i][j] == symbol:
                     if (j - 3) >= 0:
                         if (i + 3) <= 5: #5? maybe? check for off by one
-                            #check stright up and diagonal up 
-                            if self.pos[i+1][j] == symbol and self.pos[i+2][j] == symbol and self.pos[i+3][j] == '*' and up_checked == 0:
-                                score += 50
-                                up_checked = 1
-                            elif self.pos[i+1][j] == symbol and self.pos[i+2][j] == '*' and up_checked == 0:
+                            #check stright up and diagonal up
+                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol and up_checked == 0:
+                                score += 1000
+                                up_checked = 1 
+                            elif board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == '*' and up_checked == 0:
                                 if i > 0:
-                                    if self.pos[i-1][j] == symbol:
+                                    if board[i-1][j] == symbol:
+                                        pass
+                                    else:
+                                        score += 50
+                                        up_checked = 1
+                                else:
+                                    score += 50
+                                    up_checked = 1
+                            elif board[i+1][j] == symbol and board[i+2][j] == '*' and up_checked == 0:
+                                if i > 0:
+                                    if board[i-1][j] == symbol:
                                         pass
                                     else:
                                         score += 10
@@ -106,19 +159,44 @@ class Game_board:
                                 else:
                                     score += 10
                                     up_checked = 1
-                            if self.pos[i+1][j-1] == symbol and self.pos[i+2][j-2] == symbol and self.pos[i+3][j-3] == '*':
-                                score += 50   
-                            elif self.pos[i+1][j-1] == symbol and self.pos[i+2][j-2] == '*':
-                                score += 10
+                            if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+                                score += 1000
+                            elif board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+                                if j + 1 <= 6 and i - 1 >= 0:
+                                    if board[i - 1][j + 1] == symbol:
+                                        pass
+                                    else:
+                                        score += 50
+                                else: 
+                                    score += 50   
+                            elif board[i+1][j-1] == symbol and board[i+2][j-2] == '*':
+                                if j + 1 <= 6 and i - 1 >= 0:
+                                    if board[i - 1][j + 1] == symbol:
+                                        pass
+                                    else:
+                                        score += 10
+                                else: 
+                                    score += 10  
+                    
                     if (j + 3) <= 6: #6? maybe?
                         if(i + 3) <= 5:
                             #check up and up right (need to figure out how not to double add up)
-                            if self.pos[i+1][j] == symbol and self.pos[i+2][j] == symbol and self.pos[i+3][j] == '*' and up_checked == 0:
-                                score += 50
+                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol and up_checked == 0:
+                                score += 1000
                                 up_checked = 1
-                            elif self.pos[i+1][j] == symbol and self.pos[i+2][j] == '*' and up_checked == 0:
+                            elif board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == '*' and up_checked == 0:
                                 if i > 0:
-                                    if self.pos[i-1][j] == symbol:
+                                    if board[i - 1][j] == symbol:
+                                        pass
+                                    else:
+                                        score += 50
+                                        up_checked = 1
+                                else:
+                                    score += 50
+                                    up_checked = 1
+                            elif board[i+1][j] == symbol and board[i+2][j] == '*' and up_checked == 0:
+                                if i > 0:
+                                    if board[i-1][j] == symbol:
                                         pass
                                     else:
                                         score += 10
@@ -128,13 +206,43 @@ class Game_board:
                                     up_checked = 1
 
                             #up right
-                            if self.pos[i+1][j+1] == symbol and self.pos[i+2][j+2] == symbol and self.pos[i+3][j+3] == '*':
-                                score += 50
-                            elif self.pos[i+1][j+1] == symbol and self.pos[i+2][j+2] == '*':
-                                score += 10
+                            if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == symbol:
+                                score += 1000
+                            if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == '*':
+                                if i > 0 and j > 0:
+                                    if board[i - 1][j - 1] == symbol:
+                                        pass
+                                    else: 
+                                        score += 50
+                                else:
+                                    score += 50
+                            elif board[i+1][j+1] == symbol and board[i+2][j+2] == '*':
+                                if i > 0 and j > 0:
+                                    if board[i - 1][j - 1] == symbol:
+                                        pass
+                                    else:
+                                        score += 10
+                                else:
+                                    score += 10
                         #check right
-                        if self.pos[i][j+1] == symbol and self.pos[i][j+2] == symbol and self.pos[i][j+3] == '*':
-                            score += 50
+                        if board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == symbol:
+                            score += 1000
+                        elif board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == '*':
+                            if j > 0:
+                                if board[i][j - 1] == symbol:
+                                    pass
+                                else:
+                                    score += 50
+                            else:
+                                score += 50
+                        elif board[i][j+1] == symbol and board[i][j+2] == '*':
+                            if j > 0:
+                                if board[i][j - 1] == symbol:
+                                    pass
+                                else:
+                                    score += 10
+                            else:
+                                score += 10
         if first == 1:
             return score
         else:
@@ -170,7 +278,7 @@ class Game_board:
                 else:
                     self.remove_move()
             elif move == "s":
-                print(self.check_score("R"))
+                print(self.check_score("R",self.pos))
             else:
                 if player == 0:
                     while(self.move(int(move)-1, 'R')):
@@ -208,7 +316,7 @@ class Game_board:
                 else:
                     self.remove_move()
             elif move == "s":
-                print(self.check_score("R"))
+                print(self.check_score("R",self.pos))
             else:
                 if move not in ['1','2','3','4','5','6','7']:
                     self.print_help()
