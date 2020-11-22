@@ -179,9 +179,11 @@ class Game_board:
     
     def check_diag_left(self,i,j,board,symbol):
         score = 0
-        if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+        if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == symbol:
             score += 1000
-        elif board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+        elif (board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*') or \
+            (board[i+1][j-1] == symbol and board[i+2][j-2] == '*' and board[i+3][j-3] == symbol) or \
+            (board[i+1][j-1] == '*' and board[i+2][j-2] == symbol and board[i+3][j-3] == symbol):
             if j + 1 <= 6 and i - 1 >= 0:
                 if board[i - 1][j + 1] == symbol:
                     pass
@@ -189,7 +191,7 @@ class Game_board:
                     score += 50
             else: 
                 score += 50   
-        elif board[i+1][j-1] == symbol and board[i+2][j-2] == '*':
+        elif (board[i+1][j-1] == symbol and board[i+2][j-2] == '*'):
             if j + 1 <= 6 and i - 1 >= 0:
                 if board[i - 1][j + 1] == symbol:
                     pass
@@ -198,6 +200,55 @@ class Game_board:
             else: 
                 score += 10
         return score  
+    
+    def check_diag_right(self, i, j, board, symbol):
+        score = 0
+        if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == symbol:
+            score += 1000
+        elif (board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == '*') or \
+            (board[i+1][j+1] == symbol and board[i+2][j+2] == '*' and board[i+3][j+3] == symbol) or \
+                (board[i+1][j+1] == '*' and board[i+2][j+2] == symbol and board[i+3][j+3] == symbol):
+            if i > 0 and j > 0:
+                if board[i - 1][j - 1] == symbol:
+                    pass
+                else: 
+                    score += 50
+            else:
+                score += 50
+        elif board[i+1][j+1] == symbol and board[i+2][j+2] == '*':
+            if i > 0 and j > 0:
+                if board[i - 1][j - 1] == symbol:
+                    pass
+                else:
+                    score += 10
+            else:
+                score += 10
+        return score
+    
+    def check_right(self, i, j, board, symbol):
+        score = 0
+        if board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == symbol:
+            score += 1000
+        elif (board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == '*') or \
+            (board[i][j+1] == symbol and board[i][j+2] == '*' and board[i][j+3] == symbol) or \
+                (board[i][j+1] == '*' and board[i][j+2] == symbol and board[i][j+3] == symbol):
+            if j > 0:
+                if board[i][j - 1] == symbol:
+                    pass
+                else:
+                    score += 50
+            else:
+                score += 50
+        elif board[i][j+1] == symbol and board[i][j+2] == '*':
+            if j > 0:
+                if board[i][j - 1] == symbol:
+                    pass
+                else:
+                    score += 10
+            else:
+                score += 10
+        return score
+
     #this is a beast and is terrible I have no other idea how to do it and too lazy to refactor 
     def check_score(self, symbol, board, first=0):
         if first == 0:
@@ -211,75 +262,24 @@ class Game_board:
                     if (j - 3) >= 0:
                         if (i + 3) <= 5: #5? maybe? check for off by one
                             #check stright up and diagonal up
-                            score += self.check_up_score(i, j, board, symbol)
+                            if up_checked == 0:
+                                score += self.check_up_score(i, j, board, symbol)
+                                up_checked = 1
                             #check diagonal left
                             score += self.check_diag_left(i, j, board, symbol)
                     
                     if (j + 3) <= 6: #6? maybe?
                         if(i + 3) <= 5:
                             #check up and up right (need to figure out how not to double add up)
-                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol and up_checked == 0:
-                                score += 1000
+                            if up_checked == 0:
+                                score += self.check_up_score(i, j, board, symbol)
                                 up_checked = 1
-                            elif board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == '*' and up_checked == 0:
-                                if i > 0:
-                                    if board[i - 1][j] == symbol:
-                                        pass
-                                    else:
-                                        score += 50
-                                        up_checked = 1
-                                else:
-                                    score += 50
-                                    up_checked = 1
-                            elif board[i+1][j] == symbol and board[i+2][j] == '*' and up_checked == 0:
-                                if i > 0:
-                                    if board[i-1][j] == symbol:
-                                        pass
-                                    else:
-                                        score += 10
-                                        up_checked = 1
-                                else:
-                                    score += 10
-                                    up_checked = 1
 
                             #up right
-                            if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == symbol:
-                                score += 1000
-                            if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == '*':
-                                if i > 0 and j > 0:
-                                    if board[i - 1][j - 1] == symbol:
-                                        pass
-                                    else: 
-                                        score += 50
-                                else:
-                                    score += 50
-                            elif board[i+1][j+1] == symbol and board[i+2][j+2] == '*':
-                                if i > 0 and j > 0:
-                                    if board[i - 1][j - 1] == symbol:
-                                        pass
-                                    else:
-                                        score += 10
-                                else:
-                                    score += 10
+                            score += self.check_diag_right(i, j, board, symbol)
                         #check right
-                        if board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == symbol:
-                            score += 1000
-                        elif board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == '*':
-                            if j > 0:
-                                if board[i][j - 1] == symbol:
-                                    pass
-                                else:
-                                    score += 50
-                            else:
-                                score += 50
-                        elif board[i][j+1] == symbol and board[i][j+2] == '*':
-                            if j > 0:
-                                if board[i][j - 1] == symbol:
-                                    pass
-                                else:
-                                    score += 10
-                            else:
-                                score += 10
+                        score += self.check_right(i, j, board, symbol)
+                        
         if first == 1:
             return score
         else:
@@ -290,6 +290,7 @@ class Game_board:
         print("Red goes first player enters 1-7 to pick which slot to play in")
         print("b to go back a move")
         print("exit to exit")
+        print("next to get next move suggestion")
 
     def random_player(self):
         moves = [1,2,3,4,5,6,7]
