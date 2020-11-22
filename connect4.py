@@ -1,41 +1,14 @@
 from random import shuffle
-
+from numpy import argmax
+from copy import deepcopy, copy
 class Game_tree:
         board = []
-        move_one = None
-        move_two = None
-        move_three = None
-        move_four = None
-        move_five = None
-        move_six = None
-        move_seven = None
+        move = []
         parent = None
         score = 0
-        def __init__(self, board, score):
+        def __init__(self, board):
             self.board = board
-            self.score = score
-        
-        def set_one(self, game_tree):
-            self.move_one = game_tree
-        
-        def set_two(self, game_tree):
-            self.move_two = game_tree
-        
-        def set_three(self, game_tree):
-            self.move_three = game_tree
-
-        def set_four(self, game_tree):
-            self.move_four = game_tree
-
-        def set_five(self, game_tree):
-            self.move_five = game_tree
-
-        def set_six(self, game_tree):
-            self.move_six = game_tree
-
-        def set_seven(self, game_tree):
-            self.move_seven = game_tree
-
+    
 class Game_board:
     pos = []
     moves = []
@@ -68,10 +41,63 @@ class Game_board:
             if board[row][position] == "*":
                 board[row][position] = player
                 return board
-        return False
+        return None
 
     def build_tree(self, player, parent=None):
-        root = Game_tree(self.pos, self.check_score(player, self.pos))
+        if parent == None:
+            board = deepcopy(self.pos)
+            root = Game_tree(board)
+            root.score = self.check_score("B", root.board)
+        else:
+            root = parent
+        #check root win if root is winning node return.
+        if self.check_win("R", root.board) or self.check_win("R", root.board):
+            return
+        for i in range(7):
+            board = deepcopy(root.board)
+            new_board = self.tree_move(i, player, board)
+            if new_board != False:
+                root.move.append(Game_tree(new_board))
+            else:
+                root.move.append(None)
+        for node in root.move:
+            node.score = self.check_score("B", node.board)
+            node.parent = root 
+            self.build_tree("B" if player == "R" else "R", node)
+        if parent == None:
+            return root
+
+    def build_tree2(self, board, player):
+        board2 = deepcopy(board)
+        root = Game_tree(board2)
+        root.move = []
+        for i in range(7):
+            board2 = deepcopy(root.board)
+            new_board = self.tree_move(i, player, board2)
+            if new_board != None:
+                root.move.append(Game_tree(new_board))
+            else:
+                root.move.append(None)
+        for node in root.move:
+            if node != None:
+                node.score = self.check_score(player, node.board)
+                #print(node.score)
+                node.parent = root
+                for i in range(7):
+                    board2 = deepcopy(node.board)
+                    new_board = self.tree_move(i, "B" if player == "R" else "R", board2)
+                    if new_board != None:
+                        node.move.append(Game_tree(new_board))
+                    else:
+                        root.move.append(None)
+                for child in node.move:
+                    if child != None:
+                        child.score = self.check_score(player, child.board)
+                        child.parent = node
+                        child.parent.score =+ child.score/7
+        return root    
+            
+        
 
     def remove_move(self):
         move = self.moves.pop()
@@ -97,33 +123,82 @@ class Game_board:
         return True
 
     #i = columns j = rows?
-    def check_win(self, symbol):
+    def check_win(self, symbol, board):
         for i in range(6):
             for j in range(7):
-                if self.pos[i][j] == symbol:
+                if board[i][j] == symbol:
                     if (j - 3) >= 0:
                         if (i + 3) <= 5: #5? maybe? check for off by one
                             #check stright up and diagonal up left
-                            if self.pos[i+1][j] == symbol and self.pos[i+2][j] == symbol and self.pos[i+3][j] == symbol:
+                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol:
                                 return True
-                            if self.pos[i+1][j-1] == symbol and self.pos[i+2][j-2] == symbol and self.pos[i+3][j-3] == symbol:
+                            if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == symbol:
                                 return True   
                         #check left I dont think this is needed, we will just need to check right. but whatever.
-                        if self.pos[i][j-1] == symbol and self.pos[i][j-2] == symbol and self.pos[i][j-3] == symbol:
+                        if board[i][j-1] == symbol and board[i][j-2] == symbol and board[i][j-3] == symbol:
                             return True
                     if (j + 3) <= 6: #6? maybe?
                         if(i + 3) <= 5:
                             #check up and up right
-                            if self.pos[i+1][j] == symbol and self.pos[i+2][j] == symbol and self.pos[i+3][j] == symbol:
+                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol:
                                 return True
-                            if self.pos[i+1][j+1] == symbol and self.pos[i+2][j+2] == symbol and self.pos[i+3][j+3] == symbol:
+                            if board[i+1][j+1] == symbol and board[i+2][j+2] == symbol and board[i+3][j+3] == symbol:
                                 return True
                         #check right
-                        if self.pos[i][j+1] == symbol and self.pos[i][j+2] == symbol and self.pos[i][j+3] == symbol:
+                        if board[i][j+1] == symbol and board[i][j+2] == symbol and board[i][j+3] == symbol:
                             return True
         return False
-
-    #this is a best and is terrible I have no other idea how to do it
+    
+    def check_up_score(self, i, j, board, symbol):
+        score = 0
+        up_checked = 0
+        if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol and up_checked == 0:
+            score += 1000
+            up_checked = 1 
+        elif (board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == '*') and up_checked == 0:
+            if i > 0:
+                if board[i-1][j] == symbol:
+                    pass
+                else:
+                    score += 50
+                    up_checked = 1
+            else:
+                score += 50
+                up_checked = 1
+        elif board[i+1][j] == symbol and board[i+2][j] == '*' and up_checked == 0:
+            if i > 0:
+                if board[i-1][j] == symbol:
+                    pass
+                else:
+                    score += 10
+                    up_checked = 1
+            else:
+                score += 10
+                up_checked = 1
+        return score
+    
+    def check_diag_left(self,i,j,board,symbol):
+        score = 0
+        if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+            score += 1000
+        elif board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
+            if j + 1 <= 6 and i - 1 >= 0:
+                if board[i - 1][j + 1] == symbol:
+                    pass
+                else:
+                    score += 50
+            else: 
+                score += 50   
+        elif board[i+1][j-1] == symbol and board[i+2][j-2] == '*':
+            if j + 1 <= 6 and i - 1 >= 0:
+                if board[i - 1][j + 1] == symbol:
+                    pass
+                else:
+                    score += 10
+            else: 
+                score += 10
+        return score  
+    #this is a beast and is terrible I have no other idea how to do it and too lazy to refactor 
     def check_score(self, symbol, board, first=0):
         if first == 0:
             other_score = self.check_score("B" if symbol == "R" else "R", board, 1)
@@ -136,47 +211,9 @@ class Game_board:
                     if (j - 3) >= 0:
                         if (i + 3) <= 5: #5? maybe? check for off by one
                             #check stright up and diagonal up
-                            if board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == symbol and up_checked == 0:
-                                score += 1000
-                                up_checked = 1 
-                            elif board[i+1][j] == symbol and board[i+2][j] == symbol and board[i+3][j] == '*' and up_checked == 0:
-                                if i > 0:
-                                    if board[i-1][j] == symbol:
-                                        pass
-                                    else:
-                                        score += 50
-                                        up_checked = 1
-                                else:
-                                    score += 50
-                                    up_checked = 1
-                            elif board[i+1][j] == symbol and board[i+2][j] == '*' and up_checked == 0:
-                                if i > 0:
-                                    if board[i-1][j] == symbol:
-                                        pass
-                                    else:
-                                        score += 10
-                                        up_checked = 1
-                                else:
-                                    score += 10
-                                    up_checked = 1
-                            if board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
-                                score += 1000
-                            elif board[i+1][j-1] == symbol and board[i+2][j-2] == symbol and board[i+3][j-3] == '*':
-                                if j + 1 <= 6 and i - 1 >= 0:
-                                    if board[i - 1][j + 1] == symbol:
-                                        pass
-                                    else:
-                                        score += 50
-                                else: 
-                                    score += 50   
-                            elif board[i+1][j-1] == symbol and board[i+2][j-2] == '*':
-                                if j + 1 <= 6 and i - 1 >= 0:
-                                    if board[i - 1][j + 1] == symbol:
-                                        pass
-                                    else:
-                                        score += 10
-                                else: 
-                                    score += 10  
+                            score += self.check_up_score(i, j, board, symbol)
+                            #check diagonal left
+                            score += self.check_diag_left(i, j, board, symbol)
                     
                     if (j + 3) <= 6: #6? maybe?
                         if(i + 3) <= 5:
@@ -257,12 +294,35 @@ class Game_board:
     def random_player(self):
         moves = [1,2,3,4,5,6,7]
         shuffle(moves)
-        print(moves)
         return str(moves.pop())
+    
+    def tree_best_move(self, board):
+        root = self.build_tree2(board, "B")
+        scores = []
+        #print(len(root.move))
+        for node in root.move:
+            if node == None:
+                scores.append(-10000)
+            else:
+                scores.append(node.score)
+        max = argmax(scores)  
+        print(scores)      
+        return str(max+1)
+
+    def suggest_move(self, board):
+        root = self.build_tree2(board, "R")
+        scores = []
+        for node in root.move:
+            if node == None:
+                scores.append(-10000000)
+            else:
+                scores.append(node.score)
+        max = argmax(scores)
+        print("your best move is: "+str(max + 1))
 
     def two_play_game(self):
         player = 0
-        while(not(self.check_win("R")) and not(self.check_win("B")) and not(self.board_full())):
+        while(not(self.check_win("R", self.pos)) and not(self.check_win("B", self.pos)) and not(self.board_full())):
             self.print()
             if player == 0:
                 move = input("Player One Move: ")
@@ -288,10 +348,10 @@ class Game_board:
                     while(self.move(int(move)-1, 'B')):
                         move = input("Player Two Move Again(Invalid Position): ")
                     player = 0
-        if self.check_win("R"):
+        if self.check_win("R", self.pos):
             self.print()
             print("RED WINS!!")
-        elif self.check_win("B"):
+        elif self.check_win("B", self.pos):
             self.print()
             print("BLACK WINS!!")
         else:
@@ -300,16 +360,20 @@ class Game_board:
     
     def single_player(self):
         player = 0
-        while(not(self.check_win("R")) and not(self.check_win("B")) and not(self.board_full())):
+        #tree = self.build_tree("R")
+        while(not(self.check_win("R", self.pos)) and not(self.check_win("B", self.pos)) and not(self.board_full())):
             self.print()
             if player == 0:
                 move = input("Player Move: ")
             elif player == 1:
-                move = self.random_player()
+                move = self.tree_best_move(self.pos)
+                #move = self.random_player()
             if move == "h":
                 self.print_help()
             elif move == "exit":
                 exit()
+            elif move == "next":
+                self.suggest_move(self.pos)
             elif move == "b":
                 if self.is_empty():
                     print("Board is empty, please make a move first.\n")
@@ -329,10 +393,10 @@ class Game_board:
                     while(self.move(int(move)-1, 'B')):
                         move = input("Player Two Move Again(Invalid Position): ")
                     player = 0
-        if self.check_win("R"):
+        if self.check_win("R", self.pos):
             self.print()
             print("RED WINS!!")
-        elif self.check_win("B"):
+        elif self.check_win("B", self.pos):
             self.print()
             print("BLACK WINS!!")
         else:
