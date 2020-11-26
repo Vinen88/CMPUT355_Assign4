@@ -385,6 +385,7 @@ class Game_board:
     
     def single_player(self):
         player = 0
+        self.print_help()
         #tree = self.build_tree("R")
         while(not(self.check_win("R", self.pos)) and not(self.check_win("B", self.pos)) and not(self.board_full())):
             self.print()
