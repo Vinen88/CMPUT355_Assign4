@@ -248,6 +248,30 @@ class Game_board:
             else:
                 score += 10
         return score
+    
+    def check_left(self, i, j, board, symbol):
+        score = 0
+        if board[i][j-1] == symbol and board[i][j-2] == symbol and board[i][j-3] == symbol:
+            score += 1000
+        elif (board[i][j-1] == symbol and board[i][j-2] == symbol and board[i][j-3] == '*') or \
+            (board[i][j-1] == symbol and board[i][j-2] == '*' and board[i][j-3] == symbol) or \
+                (board[i][j-1] == '*' and board[i][j-2] == symbol and board[i][j-3] == symbol):
+            if j < 6:
+                if board[i][j + 1] == symbol:
+                    pass
+                else:
+                    score += 50
+            else:
+                score += 50
+        elif board[i][j-1] == symbol and board[i][j-2] == '*':
+            if j < 6:
+                if board[i][j + 1] == symbol:
+                    pass
+                else:
+                    score += 10
+            else:
+                score += 10
+        return score
 
     #this is a beast and is terrible I have no other idea how to do it and too lazy to refactor 
     def check_score(self, symbol, board, first=0):
@@ -267,7 +291,7 @@ class Game_board:
                                 up_checked = 1
                             #check diagonal left
                             score += self.check_diag_left(i, j, board, symbol)
-                    
+                        score += self.check_left(i, j, board, symbol)
                     if (j + 3) <= 6: #6? maybe?
                         if(i + 3) <= 5:
                             #check up and up right (need to figure out how not to double add up)
